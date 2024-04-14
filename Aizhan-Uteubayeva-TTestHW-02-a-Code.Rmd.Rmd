@@ -1,0 +1,212 @@
+---
+title: "HIDS-7003-01 Homework 6: DNA copy number analysis using R"
+author: "Aizhan Uteubayeva (NetID:au198)"
+date: "2023-10-01"
+output: html_document
+---
+
+```{r}
+#install.packages("rmarkdown")
+#install.packages("circlize")
+library(rmarkdown)
+library(circlize)
+```
+
+## Given:
+
+A Hepatocellular Caricnoma (HCC/Liver cancer) dataset which includes: - Clinical data on 198 patients. 104 patients with HCC. 94 patients who are "NON_TUMOR_CIRRHOTIC" (pre-cancer stage) - DNA copy number data in the form of CINdex values (Chromosome instability index values) on 197 patients. Processed and cleaned. Data is NOT in Log2 Scale.
+
+## Question
+
+Perform a group comparison analysis on the copy number data to compare the patients that had Vascular Invasion vs. those that did not have Vascular Invasion. So that means VASCULAR INVASION = Yes (comparison group) vs. VASCULAR INVASION = No (baseline group)
+
+## Step 0
+
+-   Opened clinical data file in excel to get familiar with the data.
+    -   Rows are patients.
+    -   Columns are clinical attributes
+    -   There is one row per patient
+    -   Check/Notice the Number of rows and number of columns
+    -   All data is de-identified
+-   Given that the copy number data is cleaned and processed. Must check after import
+    -   Features (cytobands in this case) are rows
+
+## Step 1 - Read in data into R
+
+### 1a) Read in clinical data
+
+```{r}
+## 218 patients
+clinData_HCC <- read.csv(file = "/Users/utb_aizhan/Desktop/R projects/HIDS7003_Precision_Health/Week6_CNP/code 2/input/HCC_toffanin_Clinical_Cleaned_Final.csv", 
+                       header = T, stringsAsFactors = F, row.names = 1)
+knitr::kable(head(clinData_HCC[,1:4],n = 5))
+```
+
+### 1b) Read in processed copy number data
+
+```{r}
+copyNum_HCC <- read.table(file = "/Users/utb_aizhan/Desktop/R projects/HIDS7003_Precision_Health/Week6_CNP/code 2/input/HCC_Toffanin_cytobands_HIDS.tsv",
+                       sep="\t", 
+                       header = T, 
+                       stringsAsFactors = F, row.names = 1)
+copyNum_HCC <- as.data.frame(copyNum_HCC)
+knitr::kable(copyNum_HCC[1:5, 1:4], caption = "Processed copy number cytoband data NOT LOG SCALE")
+```
+
+### The goal of the comparison:
+
+-   Question: What is the outcome variable column from clinical data file ? It is the column in the clinical file that contains the baseline and comparison values
+-   Answer: VASCULAR_INVASION = Yes (comparison group) vs. VASCULAR_INVASION = No (baseline group)
+
+```{r}
+table(clinData_HCC$VASCULAR_INVASION)
+# 119 blank, 34 NO and 45 YES
+#So total number of patients for anlaysis = 34 + 45 = 79
+```
+
+## Step 2 - Clean/Filter data
+
+### Filter clinical data - subset only those patients profiled on copy number array
+
+```{r}
+#subset subset only those patients profiled on copy number array
+whichPatients_HCC <- which(is.na(clinData_HCC$BiospecimenID_copyNumber)== FALSE)
+clinDataWithCN_HCC <- clinData_HCC[whichPatients_HCC, ] # 197 patients that have copy number data
+
+### Filtered out the patients with BLANK value for VASCULAR_INVASION 
+whichPatBlank_HCC <- which(clinDataWithCN_HCC$VASCULAR_INVASION  == "") # 119 blank spaces in VASCULAR_INVASION column
+clinDataWithCNFinal_HCC <- clinDataWithCN_HCC[-whichPatBlank_HCC, ] # removing the blank rows and we have 78 patients
+
+knitr::kable(table(clinDataWithCNFinal_HCC$VASCULAR_INVASION)) 
+```
+
+### Sample identifiers:
+
+-   Sample identifier for clinical data: Column "BiospecimenID_copyNumber"
+-   Sample identifier for copy number data: Column names
+
+### Filtering copy number data:
+
+```{r}
+# Found out which IDs in copy number file  match with the filtered clinical IDs
+whichIDs_HCC <- which(colnames(copyNum_HCC) %in% clinDataWithCNFinal_HCC$BiospecimenID_copyNumber)
+
+# These are the IDs that have copyNumber data. No Blanks.
+copyNumFiltered_HCC <- copyNum_HCC[, whichIDs_HCC] # 811 features rows , 78 columns,
+
+knitr::kable(copyNumFiltered_HCC[1:5, 1:4]) 
+```
+
+## Step 3 - Identify the groups to be compared
+
+### Identification of the groups to be compared (Baseline and Comparison Groups) - Clinical Data, Copy number data
+
+```{r}
+# Clinical data - Baseline group = VASCULAR_INVASION = N0 (baseline group)
+# Saved the labels (row numbers)
+baselineGrpLabels_HCC <-  which(clinDataWithCNFinal_HCC$VASCULAR_INVASION == "NO") 
+head(baselineGrpLabels_HCC)
+clinBase_HCC <- clinDataWithCNFinal_HCC[baselineGrpLabels_HCC, ] #Subset patients - 34 patients
+
+#Clinical Data Comparison group = VASCULAR_INVASION = YES (comparison group)
+# Saved the labels (row numbers)
+compGrpLabels_HCC <- which(clinDataWithCNFinal_HCC$VASCULAR_INVASION == "YES") 
+head(compGrpLabels_HCC)
+clinComp_HCC <- clinDataWithCNFinal_HCC[compGrpLabels_HCC, ] #subset patients - 44 samples
+
+#### subset Copy number Data
+copyNumBase_HCC <- copyNumFiltered_HCC[, clinBase_HCC$BiospecimenID_copyNumber] #34 samples
+copyNumComp_HCC <- copyNumFiltered_HCC[, clinComp_HCC$BiospecimenID_copyNumber] #44 samples
+```
+
+## Step 4 - Sanity check
+
+```{r}
+clinBase_HCC$BiospecimenID_copyNumber == colnames(copyNumBase_HCC)
+clinComp_HCC$BiospecimenID_copyNumber == colnames(copyNumComp_HCC)
+
+### Checking if the IDs are the same ---- you can put these in an excel to see if IDs match
+
+write.table(clinBase_HCC$BiospecimenID_copyNumber , 
+            file = "datacheck/ClinBaseIDs_HCC.tsv", sep="\t", quote = F  )
+write.table(clinComp_HCC$BiospecimenID_copyNumber , 
+            file = "datacheck/ClinCompIDs_HCC.tsv", sep="\t", quote = F  )
+write.table(colnames(copyNumBase_HCC) , 
+            file = "datacheck/CopyNumBaseIDs_HCC.tsv", sep="\t", quote = F  )
+write.table(colnames(copyNumComp_HCC) , 
+            file = "datacheck/CopyNumCompIDs_HCC.tsv", sep="\t", quote = F  )
+
+#Exported the column names from gene expression data  
+#Opened this file and checked that it contains only probe/gene names and no other garbage
+write.table(row.names(copyNumFiltered_HCC),file = "datacheck/copyNumFeatureCheck_HCC.tsv", sep="\t", quote = F  )
+```
+
+## Step 5 - Prepring data for t-test
+
+Molecular data must have features (cytobands in this case) as rows, and samples as columns. \* Objects must be data frame \* Numeric data only
+
+```{r}
+### Checking to make sure data is a numeric data frame
+knitr::kable(head(copyNumBase_HCC[1:5,1:4]))
+knitr::kable(head(copyNumComp_HCC[1:5,1:4]))
+```
+
+### Function for T-test for non log2-scale data
+
+```{r ttest}
+source("fnTTest_CopyNumber.R") 
+
+#### Calling T-test function
+results1 = fnTTest_CopyNumber(
+    baseGroup = copyNumBase_HCC,  #baseline group object
+    compGroup = copyNumComp_HCC,  #comparison group object
+    testName = "HCC",      #Name of Test
+    baseGroupName = "VascInv-NO",    #Name of baseline group VascInv-NO
+    compGroupName =  "VascInv-YES",   #Name of Comp group VascInv-YES
+    folderName = "output")     #output folder name
+```
+
+## Next Step - Sub-set top deferentially changed cytobands
+
+```{r}
+ttestResults_HCC <- read.csv("output/HCC_VascInv-YES_(Comp).vs._VascInv-NO_(Base).TTest.csv")
+
+#checked to make sure p-value column is imported as numeric 
+#sorted by p-value (just in case the results are not sorted by p-value)
+ttestResultsSorted_HCC <- dplyr::arrange(ttestResults_HCC, Pvalue)
+
+#short list feature with p-value < 0.05
+whichTop_HCC <- which(as.numeric(ttestResultsSorted_HCC$Pvalue) < 0.05) 
+topResults_HCC <- ttestResultsSorted_HCC[whichTop_HCC, ] #62 cytobands
+topCytobandFeatures_HCC <- topResults_HCC$Feature
+
+head(topCytobandFeatures_HCC)
+
+length(topCytobandFeatures_HCC)
+
+#Exported significant results
+write.csv(x = topResults_HCC, file = "output/TopCytobandResults_HCC.csv")
+
+#Exported significant cytoband features
+write.csv(x = topCytobandFeatures_HCC, file = "output/SignifCytobandFeatures_HCC.csv")
+```
+
+## PART 2 - Circos Plot
+
+```{r}
+# Get genomic location of the top cytobans
+source("fnGetCytobandLocation.R")
+cytobandLocationFinal_HCC <- fnGetCytobandLocation(topCytobandFeatures_HCC)
+
+head(cytobandLocationFinal_HCC)
+```
+
+```{r}
+# Call function to plot cytobans in a circos plot
+#sourced the R file with the function
+source("fnCircosCytoband.R")
+
+#calling function
+fnCircosCytoband(filename2 = "output/HCC_circosCyto.pdf",
+                 cytobandLocationFinal_HCC) #name and location of your circos PDF file
+```
