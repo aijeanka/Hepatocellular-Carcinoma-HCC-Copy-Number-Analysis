@@ -11,9 +11,19 @@ This repository contains analysis of DNA copy number data for Hepatocellular Car
 Perform group comparison analysis on copy number data comparing patients that had Vascular Invasion (Yes) vs. those that did not (No).
 
 ## Repository Contents
-- `input/`: Input data files including clinical and copy number data.
-- `output/`: Output files including analysis results and visualizations.
-- `datacheck/`: Files used for sanity checks of data integrity.
+- `input/PC_TAYLOR_cytobands_HIDS.csv` - Cytoband data related to the patients.
+- `input/TopCytobandResults_HCC.csv` - Results related to the top cytoband findings.
+- `input/hg19_cytoband.txt` - Genomic location data for cytobands.
+- `input/PC_Taylor_Clinical_HIDSfinal.csv` - Final clinical data for the patients.
+- `output/Aizhan_Uteubayeva_TopFeatures.tsv` - Lists top features based on your analysis criteria.
+- `output/Aizhan_Uteubayeva_Circos.pdf` - Circos plot showing the genomic results.
+- `output/Aizhan_Uteubayeva-TTestHW-06-Output.csv` - T-test results sorted by p-value.
+- `datacheck/Aizhan_Uteubayeva_ClinCompIDs_HCC.tsv` - Clinical data for comparison group.
+- `datacheck/Aizhan_Uteubayeva_ClinBaseIDs_HCC.tsv` - Clinical data for baseline group.
+- `datacheck/Aizhan_Uteubayeva_CopyNumCompIDs_HCC.tsv` - Copy number data for comparison group.
+- `datacheck/Aizhan_Uteubayeva_CopyNumBaseIDs_HCC.tsv` - Copy number data for baseline group.
+- `datacheck/Aizhan_Uteubayeva_FeatureIDs.tsv` - Feature IDs list.
+- `datacheck/Aizhan_Uteubayeva_checking.xlsx` - Excel file for checking patient IDs between clinical and copy number data.
 
 ## Steps to Run Analysis
 1. Check clinical and molecular data.
@@ -34,4 +44,3 @@ This project is released under the MIT License.
 
 ## Author
 - Aizhan Uteubayeva - Initial analysis and documentation.
-
