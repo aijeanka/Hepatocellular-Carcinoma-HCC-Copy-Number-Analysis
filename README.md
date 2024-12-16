@@ -2,117 +2,155 @@
 
 ## **Project Overview**
 
-This repository contains an analysis of DNA copy number data for Hepatocellular Carcinoma (HCC) patients. The primary objective is to compare patients with and without vascular invasion to identify key genomic differences, focusing on chromosome instability and identifying top features derived from copy number data.
-
-## **Data Description**
-
-- **Clinical Data**: Clinical details for 198 patients, including those diagnosed with HCC and those at a pre-cancer stage (*“NON_TUMOR_CIRRHOTIC”*).
-- **DNA Copy Number Data**: Chromosome instability (CINdex) values for 197 patients.
+This repository contains data, code, and results for a bioinformatics study analyzing DNA copy number data in Hepatocellular Carcinoma (HCC) patients. The goal is to identify key genomic differences between patients with and without vascular invasion, focusing on chromosome instability and identifying significant cytobands and genomic features.
 
 ---
 
-## **Analysis Goals**
+## **Highlights**
 
-1. **Group Comparison**: Compare copy number data between patients with vascular invasion (**Yes**) and those without (**No**).
-2. **Feature Identification**: Identify statistically significant cytobands and genomic features associated with vascular invasion.
-3. **Visualization**: Generate a circos plot to visualize genomic differences.
+- **Packages Used**:  
+  - `tidyverse` – Data manipulation and visualization  
+  - `dplyr` – Data filtering and wrangling  
+  - `ggplot2` – Data visualization  
+  - `circlize` – Generating circos plots  
+  - `knitr` – Reproducible report generation  
+
+- **Code**:  
+  R Markdown script for data cleaning, statistical analysis, and visualization.
+
+- **Reproduced Figures**:  
+  - Circos plots showing genomic differences  
+  - Top features identified through T-tests  
 
 ---
 
-## **Repository Contents**
+## **Repository Organization**
 
-### **Input Data**
+For improved reproducibility and clarity, the repository is organized as follows:
 
-- **Cytoband Data**:  
-  - `PC_TAYLOR_cytobands_HIDS.csv`  
-  - `hg19_cytoband.txt`  
+```
+HCC_CopyNumber_Analysis/
+│
+├── data/                        # Raw and processed data files
+│   ├── PC_TAYLOR_cytobands_HIDS.csv
+│   ├── hg19_cytoband.txt
+│   └── PC_Taylor_Clinical_HIDSfinal.csv
+│
+├── analysis/                    # Scripts and compiled reports
+│   ├── Aizhan-Uteubayeva-TTestHW-02-a-Code.Rmd.Rmd
+│   └── Aizhan-Uteubayeva-TTestHW-02-b-Code.html
+│
+├── output/                      # Results and visualization outputs
+│   ├── Aizhan_Uteubayeva_TopFeatures.tsv
+│   ├── Aizhan_Uteubayeva_Circos.pdf.pdf
+│   └── Aizhan_Uteubayeva-TTestHW-06-Output.csv
+│
+├── datacheck/                   # Data consistency check files
+│   ├── Aizhan_Uteubayeva_ClinBaseIDs_HCC.tsv
+│   ├── Aizhan_Uteubayeva_ClinCompIDs_HCC.tsv
+│   ├── Aizhan_Uteubayeva_CopyNumBaseIDs_HCC.tsv
+│   ├── Aizhan_Uteubayeva_CopyNumCompIDs_HCC.tsv
+│   ├── Aizhan_Uteubayeva_FeatureIDs.csv
+│   ├── Aizhan_Uteubayeva_FeatureIDs.tsv
+│   └── Aizhan_Uteubayeva_checking.xlsx
+│
+└── README.md                    # Project documentation
+```
 
-- **Clinical Data**:  
-  - `PC_Taylor_Clinical_HIDSfinal.csv`  
+---
 
-- **Top Cytoband Results**:  
-  - `TopCytobandResults_HCC.csv`  
+## **Methodology**
 
-### **Output Data**
+### **Step 1: Data Import**
 
-- **Top Features**:  
-  - `Aizhan_Uteubayeva_TopFeatures.tsv`  
+- **Clinical Data**: `PC_Taylor_Clinical_HIDSfinal.csv`  
+  - Contains clinical details for 198 patients, including vascular invasion status.  
 
-- **Circos Plot**:  
-  - `Aizhan_Uteubayeva_Circos.pdf.pdf`  
+- **Cytoband Data**: `PC_TAYLOR_cytobands_HIDS.csv` and `hg19_cytoband.txt`  
+  - Cytoband and genomic location data for chromosome analysis.  
 
-- **T-Test Results**:  
-  - `Aizhan_Uteubayeva-TTestHW-06-Output.csv`  
+**Code Example**:  
+```r
+clinData <- read.csv("data/PC_Taylor_Clinical_HIDSfinal.csv")
+cytobandData <- read.csv("data/PC_TAYLOR_cytobands_HIDS.csv")
+```
 
-### **Data Check Files**
+### **Step 2: Data Cleaning and Transformation**
 
-- **Clinical Group IDs**:  
-  - `Aizhan_Uteubayeva_ClinBaseIDs_HCC.tsv`  
-  - `Aizhan_Uteubayeva_ClinCompIDs_HCC.tsv`  
+- **Filter Clinical Data**: Select patients with and without vascular invasion.  
+- **Filter Copy Number Data**: Ensure consistency with clinical data and remove extraneous rows.  
 
-- **Copy Number Group IDs**:  
-  - `Aizhan_Uteubayeva_CopyNumBaseIDs_HCC.tsv`  
-  - `Aizhan_Uteubayeva_CopyNumCompIDs_HCC.tsv`  
+**Outputs**:  
+- `datacheck/Aizhan_Uteubayeva_ClinBaseIDs_HCC.tsv`  
+- `datacheck/Aizhan_Uteubayeva_ClinCompIDs_HCC.tsv`  
 
-- **Feature IDs**:  
-  - `Aizhan_Uteubayeva_FeatureIDs.csv`  
-  - `Aizhan_Uteubayeva_FeatureIDs.tsv`  
+### **Step 3: Group Identification**
 
-- **ID Check**:  
-  - `Aizhan_Uteubayeva_checking.xlsx`  
+- **Groups**:  
+  - Patients with vascular invasion (**Yes**)  
+  - Patients without vascular invasion (**No**)  
 
-### **Scripts**
+**Code Example**:  
+```r
+baselineGroup <- clinData[clinData$Vascular_Invasion == "No", ]
+comparisonGroup <- clinData[clinData$Vascular_Invasion == "Yes", ]
+```
 
-- **R Markdown Analysis**:  
-  - `Aizhan-Uteubayeva-TTestHW-02-a-Code.Rmd.Rmd`  
+### **Step 4: Statistical Analysis**
 
-- **HTML Output**:  
-  - `Aizhan-Uteubayeva-TTestHW-02-b-Code.html`  
+- **Perform T-Tests**: Compare copy number data between the two groups.  
+- **Identify Significant Features**: Export T-test results with p-values and fold changes.  
+
+**Outputs**:  
+- `output/Aizhan_Uteubayeva-TTestHW-06-Output.csv`: Full T-test results.  
+- `output/Aizhan_Uteubayeva_TopFeatures.tsv`: Top features based on p-values.
+
+### **Step 5: Visualization**
+
+- **Generate Circos Plot**: Visualize genomic differences between the groups.  
+
+**Output**:  
+- `output/Aizhan_Uteubayeva_Circos.pdf.pdf`: Circos plot showing significant genomic features.
 
 ---
 
 ## **Steps to Run Analysis**
 
-1. **Check Data Consistency**:  
-   Verify alignment between clinical data and copy number data using files in the `datacheck/` directory.
+1. **Set Up Environment**:  
+   Install the required R packages:  
+   ```r
+   install.packages(c("tidyverse", "dplyr", "ggplot2", "circlize", "knitr"))
+   ```
 
-2. **Load Data**:  
-   Import clinical and copy number data from the `input/` directory.
+2. **Clone the Repository**:  
+   ```bash
+   git clone https://github.com/yourusername/HCC_CopyNumber_Analysis.git
+   cd HCC_CopyNumber_Analysis
+   ```
 
-3. **Clean and Filter Data**:  
-   Ensure data integrity by removing any extraneous rows or inconsistencies.
+3. **Prepare Data**:  
+   Ensure all input files are placed in the `data/` directory.
 
-4. **Group Identification**:  
-   Identify patients with vascular invasion (Yes) and those without (No).
+4. **Run Analysis Script**:  
+   Execute the R Markdown script:  
+   ```r
+   rmarkdown::render("analysis/Aizhan-Uteubayeva-TTestHW-02-a-Code.Rmd.Rmd")
+   ```
 
-5. **Statistical Analysis**:  
-   - Perform T-tests on copy number data.  
-   - Calculate fold changes and q-values.  
-   - Export results sorted by p-values.
-
-6. **Visualization**:  
-   Generate circos plots to visualize significant genomic differences.
-
-7. **Export Results**:  
-   Review outputs in the `output/` directory, including top features and visualizations.
-
----
-
-## **How to Use**
-
-1. **Place Input Data**: Ensure all input files are located in the `input/` directory.
-2. **Run Analysis Script**: Execute `Aizhan-Uteubayeva-TTestHW-02-a-Code.Rmd.Rmd` to perform the analysis.
-3. **Review Results**: Check the output files and visualizations in the `output/` directory.
+5. **View Results**:  
+   - **HTML Report**: `analysis/Aizhan-Uteubayeva-TTestHW-02-b-Code.html`  
+   - **Top Features**: `output/Aizhan_Uteubayeva_TopFeatures.tsv`  
+   - **Circos Plot**: `output/Aizhan_Uteubayeva_Circos.pdf.pdf`
 
 ---
 
 ## **Skills Demonstrated**
 
-- **Bioinformatics Analysis**: Copy number analysis and differential feature identification.
-- **Data Cleaning**: Ensuring dataset consistency and integrity.
-- **Statistical Analysis**: Conducting T-tests and interpreting genomic data.
-- **Data Visualization**: Generating circos plots to visualize genomic differences.
-- **Reproducible Research**: Using R Markdown for workflow documentation.
+- **Bioinformatics Analysis**: Copy number variation analysis, differential feature identification.  
+- **Data Cleaning**: Ensuring alignment between clinical and genomic datasets.  
+- **Statistical Analysis**: T-tests, p-value calculation, and feature extraction.  
+- **Data Visualization**: Generating circos plots and summarizing results.  
+- **Reproducible Research**: Using R Markdown to document workflows.
 
 ---
 
@@ -121,6 +159,8 @@ This repository contains an analysis of DNA copy number data for Hepatocellular 
 **Aizhan Uteubayeva**  
 *Initial analysis and documentation.*
 
+---
+
 ## **License**
 
-This project is released under the MIT License.
+This project is licensed under the **MIT License**. See the `LICENSE` file for details.
